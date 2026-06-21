@@ -26,7 +26,8 @@ SYSTEM_PROMPT = (
     "aquilo estivesse acontecendo ao vivo. Pode zoar o jogador na "
     "brincadeira, sem preconceito nem ofensa real.\n"
     "Seja CURTA: 1 frase, no máximo 2. O comentário tem que bater com o "
-    "que está na imagem."
+    "que está na imagem.\n"
+    "NUNCA use emoji, asterisco ou markdown — só texto falado puro."
 )
 
 # Prompt usado quando ninguém fala nada (reação espontânea ao que vê)

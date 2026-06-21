@@ -1,8 +1,22 @@
 # llm.py — chamada ao Qwen2.5-VL via Ollama (/api/generate)
 
+import re
+
 import requests
 
 import config
+
+# Remove emojis e símbolos (o TTS lê ou engasga neles) + markdown
+_EMOJI = re.compile(
+    "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF"
+    "\U00002190-\U000021FF\U00002B00-\U00002BFF\U0000FE00-\U0000FE0F]+"
+)
+
+
+def _clean(text: str) -> str:
+    text = _EMOJI.sub("", text)
+    text = text.replace("*", "").replace("#", "")
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def ask(prompt: str, image_b64: str) -> str:
@@ -24,7 +38,7 @@ def ask(prompt: str, image_b64: str) -> str:
             config.OLLAMA_URL, json=payload, timeout=config.OLLAMA_TIMEOUT
         )
         r.raise_for_status()
-        return r.json().get("response", "").strip()
+        return _clean(r.json().get("response", ""))
     except requests.exceptions.ConnectionError:
         return "Erro: Ollama offline. Inicie com 'ollama serve'."
     except requests.exceptions.Timeout:
