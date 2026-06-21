@@ -25,5 +25,11 @@ def ask(prompt: str, image_b64: str) -> str:
         return "Erro: Ollama offline. Inicie com 'ollama serve'."
     except requests.exceptions.Timeout:
         return "Erro: o modelo demorou demais para responder."
+    except requests.exceptions.HTTPError as e:
+        try:
+            detail = r.json().get("error", str(e))
+        except Exception:
+            detail = str(e)
+        return f"Erro do Ollama: {detail} (verifique 'ollama pull {config.OLLAMA_MODEL}')"
     except Exception as e:
         return f"Erro ao consultar o modelo: {e}"
