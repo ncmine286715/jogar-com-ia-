@@ -26,7 +26,7 @@ sudo pacman -S python ffmpeg portaudio
 
 # Ollama + modelo
 # instale o Ollama (https://ollama.com), depois:
-ollama pull qwen2.5vl
+ollama pull qwen2.5vl:3b
 ollama serve   # deixa rodando em http://localhost:11434
 ```
 
@@ -44,8 +44,11 @@ pip install -r requirements.txt
 python main.py
 ```
 
-- **Modo push-to-talk** (padrão): pressione ENTER, fale ~5s, ouça a resposta.
-- **Modo contínuo**: edite `MODE = "loop"` em `config.py`.
+- **Modo `loop`** (padrão): escuta contínua sem ENTER. Detecta quando você
+  começa a falar (VAD por energia), grava e para automaticamente quando você
+  fica em silêncio.
+- **Modo `push`**: pressione ENTER, fale por `RECORD_SECONDS`, ouça a
+  resposta. Edite `MODE = "push"` em `config.py` para usar.
 
 ## Ajustes rápidos (`config.py`)
 
@@ -53,9 +56,12 @@ python main.py
 |-------------------|---------------------------------------------------|
 | `WHISPER_MODEL`   | precisão x velocidade do STT (`tiny`..`large-v3`) |
 | `WHISPER_DEVICE`  | `cpu` ou `cuda` (GPU NVIDIA)                       |
-| `RECORD_SECONDS`  | duração da gravação                               |
+| `RECORD_SECONDS`  | duração da gravação no modo `push`                |
+| `VAD_THRESHOLD`   | sensibilidade do microfone no modo `loop` (RMS)   |
+| `VAD_SILENCE_MS`  | silêncio necessário para considerar fala encerrada|
+| `VAD_MAX_SECONDS` | corte de segurança por fala no modo `loop`        |
 | `TTS_VOICE`       | voz do edge-tts                                   |
-| `MODE`            | `push` ou `loop`                                  |
+| `MODE`            | `loop` (sem ENTER) ou `push`                      |
 
 ## Notas
 

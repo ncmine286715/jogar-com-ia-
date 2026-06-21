@@ -2,7 +2,7 @@
 
 # --- Ollama ---
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5vl"
+OLLAMA_MODEL = "qwen2.5vl:3b"
 OLLAMA_TIMEOUT = 120  # segundos
 
 # Prompt de sistema: força respostas curtas e em português
@@ -20,12 +20,18 @@ WHISPER_LANGUAGE = "pt"
 # --- Áudio (gravação) ---
 SAMPLE_RATE = 16000             # Whisper espera 16 kHz
 CHANNELS = 1
-RECORD_SECONDS = 5              # duração no modo loop contínuo
+RECORD_SECONDS = 5              # duração no modo "push"
+
+# --- VAD (detecção de voz para escuta contínua, sem ENTER) ---
+VAD_FRAME_MS = 30               # tamanho do frame analisado
+VAD_THRESHOLD = 0.015           # RMS acima disso = fala (ajuste se mic for sensível)
+VAD_SILENCE_MS = 800            # silêncio contínuo para considerar fala encerrada
+VAD_MAX_SECONDS = 15            # corte de segurança por fala
 
 # --- TTS (edge-tts) ---
 TTS_VOICE = "pt-BR-AntonioNeural"
 TTS_RATE = "+0%"
 
 # --- Modo de operação ---
-# "push" = pressione ENTER para falar | "loop" = grava automaticamente em ciclo
-MODE = "push"
+# "loop" = escuta contínua por voz, sem ENTER | "push" = pressione ENTER para falar
+MODE = "loop"

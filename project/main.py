@@ -10,10 +10,15 @@ import stt
 import tts
 
 
-def interact() -> None:
+def interact(use_vad: bool) -> None:
     """Um ciclo completo: ouve -> vê -> pergunta -> fala."""
-    print("🎤 Gravando...")
-    user_text = stt.listen()
+    if use_vad:
+        print("🎤 Ouvindo... (fale quando quiser)")
+        user_text = stt.listen_vad()
+    else:
+        print("🎤 Gravando...")
+        user_text = stt.listen()
+
     if not user_text:
         print("   (nada entendido)")
         return
@@ -32,13 +37,14 @@ def interact() -> None:
 def main() -> None:
     print("=== Assistente Multimodal Local (Qwen2.5-VL) ===")
     print(f"Modo: {config.MODE}  |  Ctrl+C para sair\n")
+    use_vad = config.MODE != "push"
     try:
         while True:
             if config.MODE == "push":
                 cmd = input("ENTER para falar (q + ENTER para sair): ")
                 if cmd.strip().lower() == "q":
                     break
-            interact()
+            interact(use_vad)
             print("-" * 40)
     except KeyboardInterrupt:
         pass
