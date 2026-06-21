@@ -16,6 +16,7 @@ def ask(prompt: str, image_b64: str) -> str:
         "options": {
             "num_predict": config.OLLAMA_NUM_PREDICT,
             "temperature": config.OLLAMA_TEMPERATURE,
+            "top_p": config.OLLAMA_TOP_P,
         },
     }
     try:

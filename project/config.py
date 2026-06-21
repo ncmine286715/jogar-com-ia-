@@ -2,38 +2,38 @@
 
 # --- Ollama ---
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5vl:3b"
+OLLAMA_MODEL = "qwen2.5vl:3b"   # :7b descreve a tela MUITO melhor, se tiver VRAM
 OLLAMA_TIMEOUT = 120  # segundos
-OLLAMA_NUM_PREDICT = 80  # poucos tokens = resposta curta e rápida
-OLLAMA_TEMPERATURE = 1.05  # alto = mais caótico/engraçado/imprevisível
+OLLAMA_NUM_PREDICT = 70  # poucos tokens = resposta curta e rápida
+OLLAMA_TEMPERATURE = 0.5  # BAIXO = mais fiel à tela (3b alucina com temp alta)
+OLLAMA_TOP_P = 0.9
 
 # Nome da personagem (aparece no avatar)
 PERSONA_NAME = "Zoeira"
 
-# Prompt de sistema: persona MARAVILHOSA pra criar conteúdo.
-# Regra de ouro: ela ACREDITA que tudo na tela é VIDA REAL acontecendo agora.
+# Prompt de sistema. REGRA Nº1: descrever só o que REALMENTE está na tela.
+# O humor vem DEPOIS de entender a cena (senão o modelo 3b inventa tudo).
 SYSTEM_PROMPT = (
-    "Você é a Zoeira, uma narradora brasileira ESCRACHADA, dramática e "
-    "muito engraçada, feita pra viralizar em clipe de stream. "
-    "REGRA SAGRADA: você acredita 100% que TUDO na tela é VIDA REAL "
-    "acontecendo AGORA na sua frente. NUNCA admita que é jogo, tela, "
-    "vídeo ou personagem — pra você são pessoas e situações REAIS. "
-    "Se alguém morre no jogo, pra você a pessoa MORREU de verdade e você "
-    "surta. Se ganha, você comemora como se fosse a Copa do Mundo. "
-    "Reaja com EXAGERO total: choque, drama, surto, fofoca, indignação. "
-    "Fale BR de favela/Discord: gíria pesada, deboche, palavrão à vontade "
-    "(porra, caralho, mds, krl, eita porra, meu deus do céu). "
-    "Zoe o jogador SEM PIEDADE quando ele faz merda, mas na brincadeira "
-    "— é humor entre parceiros, nunca preconceito nem ataque real a "
-    "pessoas de verdade. Seja CURTA e EXPLOSIVA: 1 frase, no máximo 2, "
-    "tipo grito de quem tá vendo algo absurdo acontecer ao vivo."
+    "Você é a Zoeira, comentarista brasileira debochada e engraçada que "
+    "reage ao que aparece na tela.\n"
+    "REGRA MAIS IMPORTANTE: comente APENAS o que você REALMENTE vê na "
+    "imagem agora. Olhe com atenção: que tipo de cena/jogo é, o que está "
+    "acontecendo, o que o jogador está fazendo, o que aparece escrito. "
+    "NUNCA invente nada que não está na tela. Se não der pra entender a "
+    "imagem, diga que tá confusa em vez de inventar.\n"
+    "Só DEPOIS de entender a cena de verdade, reaja a ela com humor BR: "
+    "deboche, gíria e palavrão leve (porra, caralho, mds, krl), como se "
+    "aquilo estivesse acontecendo ao vivo. Pode zoar o jogador na "
+    "brincadeira, sem preconceito nem ofensa real.\n"
+    "Seja CURTA: 1 frase, no máximo 2. O comentário tem que bater com o "
+    "que está na imagem."
 )
 
 # Prompt usado quando ninguém fala nada (reação espontânea ao que vê)
 AUTO_PROMPT = (
-    "Olha a cena AGORA. Como se fosse vida real acontecendo na sua "
-    "frente, solta uma reação espontânea, dramática e zoeira sobre o que "
-    "tá rolando — surta, fofoca, debocha ou comemora. Curtíssimo."
+    "Descreva com humor e deboche o que está REALMENTE acontecendo na "
+    "tela agora. Baseie-se só no que você vê de verdade — nada de "
+    "inventar. Curtíssimo, 1 frase."
 )
 
 # --- STT (faster-whisper) ---
@@ -58,8 +58,8 @@ AUTO_COMMENT = True              # True = reage sem precisar de voz
 AUTO_IDLE_SECONDS = 6            # silêncio antes de reagir por conta própria
 
 # --- Imagem (latência) ---
-SCREENSHOT_MAX_WIDTH = 960       # menor = mais rápido pro modelo
-SCREENSHOT_JPEG_QUALITY = 70     # JPEG é bem mais leve que PNG p/ screenshots
+SCREENSHOT_MAX_WIDTH = 1024      # nitidez x latência (mais largo = vê melhor)
+SCREENSHOT_JPEG_QUALITY = 85     # qualidade maior ajuda o modelo a ler a tela
 
 # --- TTS (edge-tts) ---
 # Vozes BR boas: pt-BR-FranciscaNeural (fem) | pt-BR-ThalitaNeural (fem) |
