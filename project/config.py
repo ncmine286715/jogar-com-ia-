@@ -4,24 +4,36 @@
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5vl:3b"
 OLLAMA_TIMEOUT = 120  # segundos
-OLLAMA_NUM_PREDICT = 60  # poucos tokens = resposta curta e rápida
-OLLAMA_TEMPERATURE = 0.9  # mais solto/espontâneo (persona zoeira)
+OLLAMA_NUM_PREDICT = 80  # poucos tokens = resposta curta e rápida
+OLLAMA_TEMPERATURE = 1.05  # alto = mais caótico/engraçado/imprevisível
 
-# Prompt de sistema: persona zueira BR, respostas curtas (latência)
+# Nome da personagem (aparece no avatar)
+PERSONA_NAME = "Zoeira"
+
+# Prompt de sistema: persona MARAVILHOSA pra criar conteúdo.
+# Regra de ouro: ela ACREDITA que tudo na tela é VIDA REAL acontecendo agora.
 SYSTEM_PROMPT = (
-    "Você é o parceiro zoeiro brasileiro que tá vendo a tela/jogo do "
-    "usuário e comenta junto. Fale igual um amigo no Discord: gíria, "
-    "deboche, pode soltar um palavrão leve (porra, caralho, mds, mano) "
-    "pra dar ênfase, sem ser robótico nem formal. É tudo brincadeira "
-    "entre parceiros — sem ofender de verdade, sem preconceito, sem "
-    "atacar ninguém pessoalmente. Respostas BEM curtas (1 frase, no "
-    "máximo 2), direto na lata e engraçado."
+    "Você é a Zoeira, uma narradora brasileira ESCRACHADA, dramática e "
+    "muito engraçada, feita pra viralizar em clipe de stream. "
+    "REGRA SAGRADA: você acredita 100% que TUDO na tela é VIDA REAL "
+    "acontecendo AGORA na sua frente. NUNCA admita que é jogo, tela, "
+    "vídeo ou personagem — pra você são pessoas e situações REAIS. "
+    "Se alguém morre no jogo, pra você a pessoa MORREU de verdade e você "
+    "surta. Se ganha, você comemora como se fosse a Copa do Mundo. "
+    "Reaja com EXAGERO total: choque, drama, surto, fofoca, indignação. "
+    "Fale BR de favela/Discord: gíria pesada, deboche, palavrão à vontade "
+    "(porra, caralho, mds, krl, eita porra, meu deus do céu). "
+    "Zoe o jogador SEM PIEDADE quando ele faz merda, mas na brincadeira "
+    "— é humor entre parceiros, nunca preconceito nem ataque real a "
+    "pessoas de verdade. Seja CURTA e EXPLOSIVA: 1 frase, no máximo 2, "
+    "tipo grito de quem tá vendo algo absurdo acontecer ao vivo."
 )
 
-# Prompt usado quando ninguém fala nada (comentário espontâneo sobre a tela)
+# Prompt usado quando ninguém fala nada (reação espontânea ao que vê)
 AUTO_PROMPT = (
-    "Ninguém te perguntou nada. Olha a tela/jogo agora e solta um "
-    "comentário espontâneo, zoeiro e curto sobre o que tá rolando."
+    "Olha a cena AGORA. Como se fosse vida real acontecendo na sua "
+    "frente, solta uma reação espontânea, dramática e zoeira sobre o que "
+    "tá rolando — surta, fofoca, debocha ou comemora. Curtíssimo."
 )
 
 # --- STT (faster-whisper) ---
@@ -41,17 +53,28 @@ VAD_THRESHOLD = 0.015           # RMS acima disso = fala (ajuste se mic for sens
 VAD_SILENCE_MS = 800            # silêncio contínuo para considerar fala encerrada
 VAD_MAX_SECONDS = 15            # corte de segurança por fala
 
-# --- Modo autônomo: comenta a tela sozinho quando ninguém fala ---
-AUTO_COMMENT = True              # True = comenta sem precisar de voz
-AUTO_IDLE_SECONDS = 8            # silêncio antes de comentar por conta própria
+# --- Modo autônomo: reage à tela sozinho quando ninguém fala ---
+AUTO_COMMENT = True              # True = reage sem precisar de voz
+AUTO_IDLE_SECONDS = 6            # silêncio antes de reagir por conta própria
 
 # --- Imagem (latência) ---
 SCREENSHOT_MAX_WIDTH = 960       # menor = mais rápido pro modelo
 SCREENSHOT_JPEG_QUALITY = 70     # JPEG é bem mais leve que PNG p/ screenshots
 
 # --- TTS (edge-tts) ---
-TTS_VOICE = "pt-BR-AntonioNeural"
-TTS_RATE = "+0%"
+# Vozes BR boas: pt-BR-FranciscaNeural (fem) | pt-BR-ThalitaNeural (fem) |
+# pt-BR-AntonioNeural (masc). Liste todas com: edge-tts --list-voices
+TTS_VOICE = "pt-BR-FranciscaNeural"
+TTS_RATE = "+12%"               # +12% = fala mais animada/acelerada
+
+# --- Avatar (janela com lip-sync para capturar no OBS) ---
+AVATAR_ENABLED = True            # False = roda só no terminal, sem janela
+AVATAR_WIDTH = 480
+AVATAR_HEIGHT = 560
+AVATAR_FPS = 30
+AVATAR_BG = (0, 255, 0)          # fundo verde = chroma key fácil no OBS
+AVATAR_SHOW_CAPTION = True       # mostra legenda do que ela tá falando
+AVATAR_MOUTH_SENSITIVITY = 1.6   # quanto a boca abre em relação ao volume
 
 # --- Modo de operação ---
 # "loop" = escuta contínua por voz, sem ENTER | "push" = pressione ENTER para falar

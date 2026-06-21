@@ -1,8 +1,11 @@
-# Assistente Multimodal Local (Qwen2.5-VL + Ollama)
+# Zoeira — Assistente Multimodal Local (Qwen2.5-VL + Ollama)
 
-Assistente de voz que vê sua tela: escuta o microfone, transcreve com Whisper
-local, captura um screenshot, envia tudo para o **Qwen2.5-VL** via **Ollama
-local** e responde por voz (edge-tts).
+Narradora de IA com **avatar animado** que vê sua tela e reage **como se
+fosse vida real acontecendo ao vivo** — surta, debocha, zoa o jogador e
+comenta sozinha enquanto você joga. Feita pra **criar conteúdo / clipe de
+stream**: ouve o microfone, transcreve com Whisper local, tira screenshot,
+manda pro **Qwen2.5-VL** via **Ollama local**, responde por voz (edge-tts)
+e um **avatar abre a boca em lip-sync** com o que ela fala.
 
 100% local — exceto o TTS (edge-tts). Nenhuma API paga.
 
@@ -10,11 +13,13 @@ local** e responde por voz (edge-tts).
 
 ```
 project/
-├── main.py      # loop principal (push-to-talk ou contínuo)
+├── main.py      # orquestra: avatar (thread principal) + assistente (worker)
 ├── stt.py       # microfone + faster-whisper (voz -> texto)
 ├── screen.py    # captura de tela (mss) -> base64
 ├── llm.py       # chamada ao Ollama /api/generate (Qwen2.5-VL)
-├── tts.py       # edge-tts -> áudio (sounddevice + scipy)
+├── tts.py       # edge-tts -> áudio + lip-sync (sounddevice + scipy)
+├── avatar.py    # rosto animado (pygame) que abre a boca ao falar
+├── state.py     # estado compartilhado entre avatar e assistente
 └── config.py    # configurações
 ```
 
@@ -53,26 +58,46 @@ python main.py
   sem precisar perguntar nada. Desligue com `AUTO_COMMENT = False`.
 - **Modo `push`**: pressione ENTER, fale por `RECORD_SECONDS`, ouça a
   resposta. Edite `MODE = "push"` em `config.py` para usar.
-- **Persona**: respostas vêm no tom zoeiro/BR (gíria, deboche, palavrão
-  leve), definido em `SYSTEM_PROMPT`/`AUTO_PROMPT` em `config.py` — edite
-  livremente pra ajustar o tom.
+- **Persona "vida real"**: ela acredita 100% que o que está na tela está
+  acontecendo de verdade — reage com surto, drama e deboche (ótimo pra
+  clipe). Tom BR escrachado com palavrão, definido em
+  `SYSTEM_PROMPT`/`AUTO_PROMPT` em `config.py` — edite à vontade. Troque o
+  nome dela em `PERSONA_NAME`.
+
+## Avatar + criação de conteúdo
+
+Ao rodar, abre uma janela com o rosto da personagem. A **boca abre em
+lip-sync** com a voz (sincronizada pela amplitude do áudio), os olhos
+piscam, e aparece o **status** (ouvindo/pensando/falando) + **legenda** do
+que ela está falando.
+
+**Capturar no OBS:**
+1. O fundo da janela é **verde puro** (`AVATAR_BG`) — adicione a janela como
+   *Captura de Janela* no OBS e aplique o filtro **Chroma Key** pra deixar
+   o avatar transparente sobre o gameplay.
+2. Feche a janela (X) para encerrar tudo.
+
+Desligue o avatar com `AVATAR_ENABLED = False` (roda só no terminal/voz).
 
 ## Ajustes rápidos (`config.py`)
 
 | Variável                  | Função                                            |
 |---------------------------|----------------------------------------------------|
+| `PERSONA_NAME`            | nome da personagem (título da janela/logs)        |
+| `SYSTEM_PROMPT`           | personalidade e tom dela                           |
 | `WHISPER_MODEL`           | precisão x velocidade do STT (`tiny`..`large-v3`) |
 | `WHISPER_DEVICE`          | `cpu` ou `cuda` (GPU NVIDIA)                       |
-| `RECORD_SECONDS`          | duração da gravação no modo `push`                |
 | `VAD_THRESHOLD`           | sensibilidade do microfone no modo `loop` (RMS)   |
-| `VAD_SILENCE_MS`          | silêncio necessário para considerar fala encerrada|
-| `VAD_MAX_SECONDS`         | corte de segurança por fala no modo `loop`        |
-| `AUTO_COMMENT`            | liga/desliga o comentário espontâneo               |
-| `AUTO_IDLE_SECONDS`       | tempo sem falar até comentar sozinha               |
+| `AUTO_COMMENT`            | liga/desliga as reações espontâneas                |
+| `AUTO_IDLE_SECONDS`       | tempo sem falar até reagir sozinha                 |
 | `OLLAMA_NUM_PREDICT`      | tokens máximos da resposta (menor = mais rápido)  |
+| `OLLAMA_TEMPERATURE`      | criatividade/caos (maior = mais doido)            |
 | `SCREENSHOT_MAX_WIDTH`    | resolução enviada ao modelo (menor = mais rápido) |
-| `SCREENSHOT_JPEG_QUALITY` | qualidade do JPEG enviado (menor = mais rápido)   |
-| `TTS_VOICE`               | voz do edge-tts                                   |
+| `TTS_VOICE`               | voz do edge-tts (`edge-tts --list-voices`)        |
+| `TTS_RATE`                | velocidade da fala (ex: `+12%`)                    |
+| `AVATAR_ENABLED`          | liga/desliga a janela do avatar                    |
+| `AVATAR_BG`               | cor de fundo p/ chroma key no OBS                  |
+| `AVATAR_MOUTH_SENSITIVITY`| o quanto a boca abre em relação ao volume          |
 | `MODE`                    | `loop` (sem ENTER) ou `push`                      |
 
 ## Sobre a latência
