@@ -37,9 +37,12 @@ def _rms(frame: np.ndarray) -> float:
     return float(np.sqrt(np.mean(np.square(frame, dtype=np.float64))))
 
 
-def record_until_silence() -> np.ndarray:
+def record_until_silence(idle_timeout: float = None) -> "np.ndarray | None":
     """Escuta continuamente e grava só quando detecta fala (VAD por energia).
-    Bloqueia até o usuário falar e parar de falar (sem precisar de ENTER)."""
+
+    Se idle_timeout for passado e ninguém falar dentro desse tempo, retorna
+    None (permite ao caller decidir comentar sozinho, ex: modo autônomo).
+    """
     q = queue.Queue()
 
     def callback(indata, frames, time_info, status):
@@ -48,7 +51,8 @@ def record_until_silence() -> np.ndarray:
     buffer = []
     speaking = False
     silence_frames = 0
-    start_time = None
+    speech_start = None
+    wait_start = time.time()
 
     with sd.InputStream(
         samplerate=config.SAMPLE_RATE,
@@ -64,7 +68,7 @@ def record_until_silence() -> np.ndarray:
             if level > config.VAD_THRESHOLD:
                 if not speaking:
                     speaking = True
-                    start_time = time.time()
+                    speech_start = time.time()
                 silence_frames = 0
                 buffer.append(frame)
             elif speaking:
@@ -73,8 +77,14 @@ def record_until_silence() -> np.ndarray:
                 if silence_frames >= _SILENCE_FRAMES_TO_STOP:
                     break
 
-            if speaking and (time.time() - start_time) > config.VAD_MAX_SECONDS:
+            if speaking and (time.time() - speech_start) > config.VAD_MAX_SECONDS:
                 break
+            if (
+                not speaking
+                and idle_timeout is not None
+                and (time.time() - wait_start) > idle_timeout
+            ):
+                return None
 
     return np.concatenate(buffer) if buffer else np.array([], dtype="float32")
 
@@ -100,10 +110,16 @@ def listen(seconds: float = None) -> str:
         return ""
 
 
-def listen_vad() -> str:
-    """Escuta contínua por voz (sem ENTER) + transcreve. Vazio se falhar."""
+def listen_vad(idle_timeout: float = None) -> "str | None":
+    """Escuta contínua por voz (sem ENTER) + transcreve.
+
+    Retorna None se idle_timeout expirar sem ninguém falar, "" se falhar
+    a transcrição, ou o texto reconhecido.
+    """
     try:
-        audio = record_until_silence()
+        audio = record_until_silence(idle_timeout)
+        if audio is None:
+            return None
         if audio.size == 0:
             return ""
         return transcribe(audio)

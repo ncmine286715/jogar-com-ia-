@@ -13,7 +13,10 @@ def ask(prompt: str, image_b64: str) -> str:
         "system": config.SYSTEM_PROMPT,
         "images": [image_b64],
         "stream": False,
-        "options": {"num_predict": 256},  # respostas curtas
+        "options": {
+            "num_predict": config.OLLAMA_NUM_PREDICT,
+            "temperature": config.OLLAMA_TEMPERATURE,
+        },
     }
     try:
         r = requests.post(

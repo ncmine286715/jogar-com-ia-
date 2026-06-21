@@ -10,28 +10,37 @@ import stt
 import tts
 
 
+def respond(prompt_text: str, label: str) -> None:
+    """Captura tela, manda pro LLM com o prompt dado e fala a resposta."""
+    image_b64 = screen.capture_base64()
+    answer = llm.ask(prompt_text, image_b64)
+    print(f"🤖 IA ({label}): {answer}")
+    tts.speak(answer)
+
+
 def interact(use_vad: bool) -> None:
-    """Um ciclo completo: ouve -> vê -> pergunta -> fala."""
+    """Um ciclo completo: ouve -> vê -> pergunta -> fala.
+
+    No modo VAD com AUTO_COMMENT ligado, se ninguém falar dentro de
+    AUTO_IDLE_SECONDS, comenta a tela por conta própria.
+    """
     if use_vad:
+        idle = config.AUTO_IDLE_SECONDS if config.AUTO_COMMENT else None
         print("🎤 Ouvindo... (fale quando quiser)")
-        user_text = stt.listen_vad()
+        user_text = stt.listen_vad(idle_timeout=idle)
     else:
         print("🎤 Gravando...")
         user_text = stt.listen()
+
+    if user_text is None:
+        respond(config.AUTO_PROMPT, "espontâneo")
+        return
 
     if not user_text:
         print("   (nada entendido)")
         return
     print(f"👤 Você: {user_text}")
-
-    print("🖥️  Capturando tela...")
-    image_b64 = screen.capture_base64()
-
-    print("🤖 Pensando...")
-    answer = llm.ask(user_text, image_b64)
-    print(f"🤖 IA: {answer}")
-
-    tts.speak(answer)
+    respond(user_text, "resposta")
 
 
 def main() -> None:
