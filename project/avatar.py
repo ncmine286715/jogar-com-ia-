@@ -4,11 +4,61 @@
 
 import math
 import os
+import platform
 import random
+import shutil
+import subprocess
 import time
 
 import config
 import state
+
+
+def _set_always_on_top(window_title: str) -> None:
+    """Tenta fixar a janela do avatar por cima de qualquer outro app.
+    Best-effort: cada SO/servidor grafico tem sua propria API e o pygame
+    nao expoe isso direto, entao usamos a ferramenta nativa disponivel."""
+    system = platform.system()
+    try:
+        if system == "Windows":
+            import ctypes
+
+            hwnd = ctypes.windll.user32.FindWindowW(None, window_title)
+            if hwnd:
+                HWND_TOPMOST = -1
+                SWP_NOMOVE, SWP_NOSIZE = 0x0002, 0x0001
+                ctypes.windll.user32.SetWindowPos(
+                    hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
+                )
+            return
+
+        if system == "Linux":
+            # Wayland nao deixa apps fixarem "always on top" por fora
+            # (limitacao do protocolo, nao do programa). X11 (incluindo
+            # XWayland) aceita via wmctrl/xdotool.
+            if shutil.which("wmctrl"):
+                subprocess.run(
+                    ["wmctrl", "-r", window_title, "-b", "add,above"],
+                    check=False, capture_output=True,
+                )
+            elif shutil.which("xdotool"):
+                subprocess.run(
+                    ["xdotool", "search", "--name", window_title,
+                     "windowstate", "--above", "add"],
+                    check=False, capture_output=True,
+                )
+            else:
+                print(
+                    "[AVATAR] instale 'wmctrl' (sudo apt install wmctrl) "
+                    "pra fixar a janela por cima de outros apps."
+                )
+            return
+
+        if system == "Darwin":
+            print("[AVATAR] always-on-top automatico nao suportado no macOS; "
+                  "fixe manualmente ou use o app Yoink/AlwaysOnTop.")
+    except Exception as e:
+        print(f"[AVATAR] nao consegui fixar janela por cima ({e}).")
 
 # Cores (modo desenhado / fallback)
 SKIN = (255, 219, 172)
@@ -181,6 +231,10 @@ def run():
         print(f"[AVATAR] não foi possível abrir janela ({e}); sem avatar.")
         return False
 
+    if config.AVATAR_ALWAYS_ON_TOP:
+        time.sleep(0.3)  # da tempo do window manager registrar a janela
+        _set_always_on_top(config.PERSONA_NAME)
+
     png_assets = _load_png_assets(pygame, W, H)
     if png_assets:
         print(f"[AVATAR] usando PNG de {config.AVATAR_ASSETS_DIR}/")
@@ -191,9 +245,17 @@ def run():
 
     next_blink = time.time() + random.uniform(2, 5)
     blink_until = 0.0
+    next_top_refresh = time.time() + 3.0
 
     while state.running:
         now = time.time()
+
+        # alguns window managers "esquecem" o always-on-top quando outro
+        # app rouba o foco (jogo em fullscreen, por ex.); reforça de tempos
+        # em tempos pra garantir que o avatar continue sobreposto.
+        if config.AVATAR_ALWAYS_ON_TOP and now > next_top_refresh:
+            _set_always_on_top(config.PERSONA_NAME)
+            next_top_refresh = now + 3.0
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 state.running = False
