@@ -2,7 +2,7 @@
 
 # --- Ollama ---
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5vl:3b"   # :7b descreve a tela MUITO melhor, se tiver VRAM
+OLLAMA_MODEL = "qwen2.5vl:7b"   # 7b le a tela MUITO melhor que o 3b
 OLLAMA_TIMEOUT = 120  # segundos
 OLLAMA_NUM_PREDICT = 70  # poucos tokens = resposta curta e rápida
 OLLAMA_TEMPERATURE = 0.5  # BAIXO = mais fiel à tela (3b alucina com temp alta)
