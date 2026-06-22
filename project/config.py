@@ -1,17 +1,17 @@
 # config.py — configurações centrais do assistente
 
-# --- NVIDIA NIM (API na nuvem, OpenAI-compatible) ---
-# Obtenha sua API key em https://build.nvidia.com/ (grátis pra começar).
-# Coloque em variável de ambiente: export NIM_API_KEY="nvapi-..."
+# --- Qwen via proxy local (qwen-code-oai-proxy, OpenAI-compatible) ---
+# O proxy roda em http://localhost:3000 e expõe a API no padrão OpenAI.
+# Repo: https://github.com/aptdnfapt/qwen-code-oai-proxy
+# A auth é feita pela sessão do navegador no proxy, então a API key aqui é só
+# um placeholder (pode sobrescrever com a env var QWEN_API_KEY se precisar).
 import os
-NIM_API_KEY = os.environ.get("NIM_API_KEY", "")
-NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
-# Melhor modelo de visão no NIM: Llama 4 Maverick é rápido, excelente em visão,
-# segue instrução muito bem e entende português nativo — incomparável com local.
-# Alternativas: "meta/llama-4-scout-17b-16e-instruct" (mais leve/rápido),
-#               "nvidia/llama-3.2-nv-vision-72b-instruct" (mais pesado/preciso).
-NIM_MODEL = "meta/llama-4-maverick-17b-128e-instruct"
-NIM_TIMEOUT = 30            # NIM é rápido; 30s basta (vs 120s local)
+NIM_API_KEY = os.environ.get("QWEN_API_KEY", "sk-local")
+NIM_BASE_URL = os.environ.get("QWEN_BASE_URL", "http://localhost:3000/v1")
+# Melhor modelo de visão do Qwen: 235B, top de linha (vê e raciocina muito
+# melhor que os VL menores). Alternativa mais leve/rápida: "qwen3-vl-30b-a3b".
+NIM_MODEL = os.environ.get("QWEN_MODEL", "qwen3-vl-235b-a22b")
+NIM_TIMEOUT = 60            # modelo grande pode demorar um pouco mais
 NIM_MAX_TOKENS = 80         # respostas curtas com punch
 NIM_TEMPERATURE = 0.85      # zueira ativada
 NIM_TOP_P = 0.95

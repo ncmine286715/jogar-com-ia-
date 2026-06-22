@@ -27,7 +27,7 @@ _PERSONA_TAG = (
 def ask(prompt: str, image_b64: str) -> str:
     """Envia texto + imagem ao NVIDIA NIM e retorna a resposta textual."""
     if not config.NIM_API_KEY:
-        return "Erro: defina NIM_API_KEY (export NIM_API_KEY='nvapi-...')"
+        return "Erro: defina QWEN_API_KEY ou rode o proxy em localhost:3000"
 
     messages = [
         {"role": "system", "content": config.SYSTEM_PROMPT},
@@ -70,20 +70,20 @@ def ask(prompt: str, image_b64: str) -> str:
         text = data["choices"][0]["message"]["content"]
         return _clean(text)
     except requests.exceptions.ConnectionError:
-        return "Erro: sem conexao com NVIDIA NIM. Verifique sua internet."
+        return "Erro: proxy offline. Rode o qwen-code-oai-proxy em localhost:3000."
     except requests.exceptions.Timeout:
-        return "Erro: NIM demorou demais pra responder."
+        return "Erro: o modelo demorou demais pra responder."
     except requests.exceptions.HTTPError as e:
         try:
             detail = r.json().get("detail", r.json().get("error", {}).get("message", str(e)))
         except Exception:
             detail = str(e)
         if r.status_code == 401:
-            return "Erro: API key invalida. Verifique NIM_API_KEY."
+            return "Erro: nao autorizado. Verifique a sessao/login do proxy."
         if r.status_code == 429:
             return "Erro: limite de requisicoes atingido. Espere um pouco."
-        return f"Erro do NIM ({r.status_code}): {detail}"
+        return f"Erro do proxy ({r.status_code}): {detail}"
     except (KeyError, IndexError):
-        return "Erro: resposta inesperada do NIM."
+        return "Erro: resposta inesperada do proxy."
     except Exception as e:
         return f"Erro ao consultar o modelo: {e}"
