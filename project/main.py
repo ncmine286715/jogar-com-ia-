@@ -3,6 +3,7 @@
 # Avatar (pygame) roda na thread principal; o assistente roda numa worker.
 
 import threading
+import time
 
 import avatar
 import config
@@ -14,20 +15,26 @@ import stt
 import tts
 
 
+_last_live = 0.0  # quando saiu o último comentário "ao vivo" (controle de ritmo)
+
+
 def respond(prompt_text: str, label: str) -> None:
-    """Captura tela, manda pro LLM e fala (com lip-sync no avatar)."""
+    """Vê o frame mais recente do stream, manda pro LLM e fala."""
     state.status = "pensando"
-    image_b64 = screen.capture_base64()
+    image_b64 = screen.latest_base64()        # frame ao vivo, latência baixa
     answer = llm.ask(prompt_text, image_b64)
     print(f"[{config.PERSONA_NAME} | {label}] {answer}")
     state.caption = answer
     sfx.play_for(answer)            # efeito sonoro que combina com o clima
     tts.speak(answer)
+    screen.mark_scene()             # zera o detector de mudança após comentar
     state.status = "ouvindo"
 
 
 def cycle(use_vad: bool) -> None:
-    """Um ciclo: ouve -> vê -> reage -> fala (ou reage sozinha se ninguém fala)."""
+    """Um ciclo: ouve -> vê -> reage. Se ninguém fala, comenta AO VIVO quando
+    a tela muda (reação a eventos do jogo em tempo real)."""
+    global _last_live
     if use_vad:
         state.status = "ouvindo"
         idle = config.AUTO_IDLE_SECONDS if config.AUTO_COMMENT else None
@@ -36,8 +43,15 @@ def cycle(use_vad: bool) -> None:
         state.status = "ouvindo"
         user_text = stt.listen()
 
-    if user_text is None:               # ninguém falou -> reage por conta própria
-        respond(config.AUTO_PROMPT, "espontâneo")
+    if user_text is None:               # ninguém falou
+        if not config.AUTO_COMMENT:
+            return
+        # Só comenta ao vivo se a tela mudou o bastante E respeitou o ritmo.
+        changed = screen.scene_change() >= config.STREAM_SCENE_THRESHOLD
+        ready = (time.time() - _last_live) >= config.STREAM_MIN_INTERVAL
+        if changed and ready:
+            _last_live = time.time()
+            respond(config.AUTO_PROMPT, "ao vivo")
         return
     if not user_text:                   # falhou transcrição / vazio
         return
@@ -64,6 +78,8 @@ def main() -> None:
     print(f"=== {config.PERSONA_NAME} — Assistente Multimodal Local ===")
     print(f"Modo: {config.MODE} | Avatar: {config.AVATAR_ENABLED} | Ctrl+C p/ sair\n")
     use_vad = config.MODE != "push"
+
+    screen.start_stream()           # captura de tela contínua (tempo real)
 
     try:
         if config.AVATAR_ENABLED:

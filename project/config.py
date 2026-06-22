@@ -2,7 +2,11 @@
 
 # --- Ollama ---
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5vl:7b"   # 7b le a tela MUITO melhor que o 3b
+# Melhor modelo de visão local pra ESTE caso (qualidade de leitura x latência
+# pra tempo real). qwen2.5vl:7b é o ponto ideal. Se tiver GPU forte, dá pra
+# subir pra "qwen2.5vl:32b" (vê melhor, porém mais lento — menos "ao vivo").
+# Pra PC mais fraco, "qwen2.5vl:3b" responde mais rápido (mas alucina mais).
+OLLAMA_MODEL = "qwen2.5vl:7b"
 OLLAMA_TIMEOUT = 120  # segundos
 OLLAMA_NUM_PREDICT = 55  # CURTO de verdade: corta os textões que ficavam ruins
 OLLAMA_TEMPERATURE = 0.85  # MAIS ALTO = mais zueira/personalidade (0.5 deixava sério)
@@ -64,7 +68,15 @@ VAD_MAX_SECONDS = 15            # corte de segurança por fala
 
 # --- Modo autônomo: reage à tela sozinho quando ninguém fala ---
 AUTO_COMMENT = True              # True = reage sem precisar de voz
-AUTO_IDLE_SECONDS = 6            # silêncio antes de reagir por conta própria
+AUTO_IDLE_SECONDS = 2            # silêncio curtinho: reação quase ao vivo
+
+# --- Stream / tempo real (transmissão de tela) ---
+# A tela é capturada continuamente numa thread; a IA comenta AO VIVO quando
+# algo muda no jogo, sem precisar tirar print a cada vez.
+STREAM_ENABLED = True
+STREAM_FPS = 2                   # quadros/seg da captura contínua (2 = leve e fluido)
+STREAM_SCENE_THRESHOLD = 0.06    # quanto a tela precisa mudar p/ comentar (0..1)
+STREAM_MIN_INTERVAL = 4.0        # segundos mínimos entre comentários ao vivo
 
 # --- Imagem (latência) ---
 SCREENSHOT_MAX_WIDTH = 1024      # nitidez x latência (mais largo = vê melhor)
