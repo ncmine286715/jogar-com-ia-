@@ -61,6 +61,45 @@ def _ask_gemini(prompt: str, image_b64: str) -> str:
         return f"Erro Gemini: {e}"
 
 
+def _ask_qwen(prompt: str, image_b64: str) -> str:
+    headers = {
+        "Authorization": f"Bearer {config.QWEN_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    messages = [
+        {"role": "system", "content": config.SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"},
+                },
+                {"type": "text", "text": prompt},
+            ],
+        },
+    ]
+    payload = {
+        "model": config.QWEN_MODEL,
+        "messages": messages,
+        "max_tokens": config.QWEN_MAX_TOKENS,
+        "temperature": config.QWEN_TEMPERATURE,
+        "stream": False,
+    }
+    try:
+        r = requests.post(
+            config.QWEN_URL, json=payload, headers=headers, timeout=config.QWEN_TIMEOUT
+        )
+        r.raise_for_status()
+        return _clean(r.json()["choices"][0]["message"]["content"])
+    except requests.exceptions.Timeout:
+        return "Porra, travou tudo, nao consigo pensar direito agora."
+    except requests.exceptions.ConnectionError:
+        return "Mano, perdi a conexao, to isolado aqui."
+    except Exception as e:
+        return f"Erro Qwen: {e}"
+
+
 def _ask_nim(prompt: str, image_b64: str) -> str:
     headers = {
         "Authorization": f"Bearer {config.NIM_API_KEY}",
@@ -136,6 +175,8 @@ def _ask_ollama(prompt: str, image_b64: str) -> str:
 def ask(prompt: str, image_b64: str) -> str:
     if config.LLM_BACKEND == "gemini":
         return _ask_gemini(prompt, image_b64)
+    if config.LLM_BACKEND == "qwen":
+        return _ask_qwen(prompt, image_b64)
     if config.LLM_BACKEND == "nim":
         return _ask_nim(prompt, image_b64)
     return _ask_ollama(prompt, image_b64)

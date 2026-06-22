@@ -4,9 +4,18 @@ load_dotenv()
 
 # --- Backend do modelo ---
 # "gemini" = Google Gemini Flash (gratis, rapido, melhor visao)
+# "qwen"   = Qwen-VL via DashScope (Alibaba Cloud, gratis)
 # "nim"    = NVIDIA NIM na nuvem (build.nvidia.com)
 # "ollama" = local (Qwen2.5-VL, 100% offline)
 LLM_BACKEND = "gemini"
+
+# --- Qwen Cloud (DashScope) ---
+QWEN_API_KEY = os.environ.get("DASHSCOPE_API_KEY", "")
+QWEN_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"
+QWEN_MODEL = "qwen-vl-max"
+QWEN_TIMEOUT = 25
+QWEN_MAX_TOKENS = 150
+QWEN_TEMPERATURE = 0.85
 
 # --- Google Gemini ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
