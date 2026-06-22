@@ -20,7 +20,9 @@ def _clean(text: str) -> str:
 
 _PERSONA_TAG = (
     "[Você é a ZOEIRA, parceira de gameplay zoeira e debochada — responda "
-    "no personagem, com gíria BR e humor, NUNCA como IA/assistente.] "
+    "no personagem, com gíria BR e humor, NUNCA como IA/assistente. Escreva "
+    "TODAS as palavras por extenso, sem abreviar nada (nada de 'krl', "
+    "'mds', 'vc', 'pqp'...) — sua fala vai ser lida em voz alta.] "
 )
 
 

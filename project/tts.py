@@ -16,12 +16,16 @@ from scipy.io import wavfile
 import config
 import state
 
-# Gírias/risadas escritas que a voz lê errado -> como devem soar faladas.
+# Gírias/abreviações/internetês escritas que a voz lê errado ou engole ->
+# expandidas pra palavra completa, como se fosse falar em voz alta.
 _SPEECH_FIXES = {
-    "krl": "caralho", "pqp": "puta que pariu", "mds": "meu deus",
-    "vc": "você", "vcs": "vocês", "tb": "também", "tbm": "também",
-    "blz": "beleza", "vlw": "valeu", "flw": "falou", "pf": "por favor",
-    "msm": "mesmo", "qnd": "quando", "pra": "pra", "tá": "tá", "né": "né",
+    "krl": "caralho", "kct": "caralho", "pqp": "puta que pariu",
+    "mds": "meu deus", "pq": "porque", "vc": "você", "vcs": "vocês",
+    "tb": "também", "tbm": "também", "blz": "beleza", "vlw": "valeu",
+    "flw": "falou", "pf": "por favor", "msm": "mesmo", "qnd": "quando",
+    "obg": "obrigado", "dpois": "depois", "agr": "agora", "td": "tudo",
+    "n": "não", "naum": "não", "eh": "é", "ctz": "com certeza",
+    "slc": "se lasca", "fdp": "filho da puta", "vsf": "vai se foder",
 }
 # Risada escrita repetida (kkkk, rsrs, hahaha, ahahah) -> uma risada limpa.
 _LAUGH_RE = re.compile(r"\b(?:k{2,}|(?:rs){2,}|(?:a?ha){2,}h?|hu{2,})\b", re.I)
