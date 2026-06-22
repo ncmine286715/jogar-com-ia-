@@ -1,4 +1,4 @@
-# llm.py — chamada ao Qwen2.5-VL via Ollama (/api/generate)
+# llm.py — chamada ao modelo de visão via NVIDIA NIM (API OpenAI-compatible)
 
 import re
 
@@ -6,7 +6,6 @@ import requests
 
 import config
 
-# Remove emojis e símbolos (o TTS lê ou engasga neles) + markdown
 _EMOJI = re.compile(
     "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF"
     "\U00002190-\U000021FF\U00002B00-\U00002BFF\U0000FE00-\U0000FE0F]+"
@@ -19,9 +18,6 @@ def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-# Reforço de persona colado no prompt: o qwen2.5vl dá pouco peso ao campo
-# "system", então repetimos a regra de ouro junto da fala do usuário pra ele
-# NUNCA cair no modo "sou uma IA assistente".
 _PERSONA_TAG = (
     "[Você é a ZOEIRA, parceira de gameplay zoeira e debochada — responda "
     "no personagem, com gíria BR e humor, NUNCA como IA/assistente.] "
@@ -29,35 +25,65 @@ _PERSONA_TAG = (
 
 
 def ask(prompt: str, image_b64: str) -> str:
-    """Envia texto + imagem (base64) ao Ollama e retorna a resposta textual."""
-    payload = {
-        "model": config.OLLAMA_MODEL,
-        "prompt": _PERSONA_TAG + prompt,
-        "system": config.SYSTEM_PROMPT,
-        "images": [image_b64],
-        "stream": False,
-        "options": {
-            "num_predict": config.OLLAMA_NUM_PREDICT,
-            "temperature": config.OLLAMA_TEMPERATURE,
-            "top_p": config.OLLAMA_TOP_P,
-            "stop": config.OLLAMA_STOP,
+    """Envia texto + imagem ao NVIDIA NIM e retorna a resposta textual."""
+    if not config.NIM_API_KEY:
+        return "Erro: defina NIM_API_KEY (export NIM_API_KEY='nvapi-...')"
+
+    messages = [
+        {"role": "system", "content": config.SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"},
+                },
+                {"type": "text", "text": _PERSONA_TAG + prompt},
+            ],
         },
+    ]
+
+    payload = {
+        "model": config.NIM_MODEL,
+        "messages": messages,
+        "max_tokens": config.NIM_MAX_TOKENS,
+        "temperature": config.NIM_TEMPERATURE,
+        "top_p": config.NIM_TOP_P,
+        "stop": config.NIM_STOP,
+        "stream": False,
     }
+
+    headers = {
+        "Authorization": f"Bearer {config.NIM_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
     try:
         r = requests.post(
-            config.OLLAMA_URL, json=payload, timeout=config.OLLAMA_TIMEOUT
+            f"{config.NIM_BASE_URL}/chat/completions",
+            json=payload,
+            headers=headers,
+            timeout=config.NIM_TIMEOUT,
         )
         r.raise_for_status()
-        return _clean(r.json().get("response", ""))
+        data = r.json()
+        text = data["choices"][0]["message"]["content"]
+        return _clean(text)
     except requests.exceptions.ConnectionError:
-        return "Erro: Ollama offline. Inicie com 'ollama serve'."
+        return "Erro: sem conexao com NVIDIA NIM. Verifique sua internet."
     except requests.exceptions.Timeout:
-        return "Erro: o modelo demorou demais para responder."
+        return "Erro: NIM demorou demais pra responder."
     except requests.exceptions.HTTPError as e:
         try:
-            detail = r.json().get("error", str(e))
+            detail = r.json().get("detail", r.json().get("error", {}).get("message", str(e)))
         except Exception:
             detail = str(e)
-        return f"Erro do Ollama: {detail} (verifique 'ollama pull {config.OLLAMA_MODEL}')"
+        if r.status_code == 401:
+            return "Erro: API key invalida. Verifique NIM_API_KEY."
+        if r.status_code == 429:
+            return "Erro: limite de requisicoes atingido. Espere um pouco."
+        return f"Erro do NIM ({r.status_code}): {detail}"
+    except (KeyError, IndexError):
+        return "Erro: resposta inesperada do NIM."
     except Exception as e:
         return f"Erro ao consultar o modelo: {e}"

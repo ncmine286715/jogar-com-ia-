@@ -1,18 +1,21 @@
 # config.py — configurações centrais do assistente
 
-# --- Ollama ---
-OLLAMA_URL = "http://localhost:11434/api/generate"
-# Melhor modelo de visão local pra ESTE caso (qualidade de leitura x latência
-# pra tempo real). qwen2.5vl:7b é o ponto ideal. Se tiver GPU forte, dá pra
-# subir pra "qwen2.5vl:32b" (vê melhor, porém mais lento — menos "ao vivo").
-# Pra PC mais fraco, "qwen2.5vl:3b" responde mais rápido (mas alucina mais).
-OLLAMA_MODEL = "qwen2.5vl:7b"
-OLLAMA_TIMEOUT = 120  # segundos
-OLLAMA_NUM_PREDICT = 55  # CURTO de verdade: corta os textões que ficavam ruins
-OLLAMA_TEMPERATURE = 0.85  # MAIS ALTO = mais zueira/personalidade (0.5 deixava sério)
-OLLAMA_TOP_P = 0.95
-# Para de gerar quando começa um novo turno (evita textão e repetição)
-OLLAMA_STOP = ["\n\n", "Você:", "👤"]
+# --- NVIDIA NIM (API na nuvem, OpenAI-compatible) ---
+# Obtenha sua API key em https://build.nvidia.com/ (grátis pra começar).
+# Coloque em variável de ambiente: export NIM_API_KEY="nvapi-..."
+import os
+NIM_API_KEY = os.environ.get("NIM_API_KEY", "")
+NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
+# Melhor modelo de visão no NIM: Llama 4 Maverick é rápido, excelente em visão,
+# segue instrução muito bem e entende português nativo — incomparável com local.
+# Alternativas: "meta/llama-4-scout-17b-16e-instruct" (mais leve/rápido),
+#               "nvidia/llama-3.2-nv-vision-72b-instruct" (mais pesado/preciso).
+NIM_MODEL = "meta/llama-4-maverick-17b-128e-instruct"
+NIM_TIMEOUT = 30            # NIM é rápido; 30s basta (vs 120s local)
+NIM_MAX_TOKENS = 80         # respostas curtas com punch
+NIM_TEMPERATURE = 0.85      # zueira ativada
+NIM_TOP_P = 0.95
+NIM_STOP = ["\n\n"]
 
 # Nome da personagem (aparece no avatar)
 PERSONA_NAME = "Zoeira"
