@@ -38,8 +38,26 @@ def _brightness(img: Image.Image) -> float:
     return ImageStat.Stat(img.convert("L")).mean[0]
 
 
+# mss não é thread-safe: o stream contínuo e a captura sob demanda nunca
+# podem chamar sct.grab() ao mesmo tempo (causa corrupção/índice inválido).
+_mss_lock = threading.Lock()
+_bad_monitor_warned = False
+
+
 def _capture_mss(monitor: int) -> Image.Image:
-    with mss.mss() as sct:
+    global _bad_monitor_warned
+    with _mss_lock, mss.mss() as sct:
+        # monitors[0] = todos os monitores combinados; monitors[1+] = cada
+        # monitor físico. Se o índice pedido não existir (ex: display virtual
+        # com só 1 entrada), cai pro 0 em vez de quebrar.
+        if monitor >= len(sct.monitors):
+            if not _bad_monitor_warned:
+                _bad_monitor_warned = True
+                print(
+                    f"[SCREEN] Monitor {monitor} não existe "
+                    f"({len(sct.monitors)} disponível(eis)); usando o 0."
+                )
+            monitor = 0
         shot = sct.grab(sct.monitors[monitor])
     return Image.frombytes("RGB", shot.size, shot.rgb)
 
@@ -176,7 +194,7 @@ def scene_change() -> float:
     """Diferença média (0..1) entre o frame atual e o último frame 'marcado'."""
     with _stream_lock:
         cur, ref = _stream_thumb, _scene_ref[0]
-    if cur is None or ref is None:
+    if cur is None or ref is None or cur.shape != ref.shape:
         return 1.0
     return float(np.mean(np.abs(cur - ref)) / 255.0)
 

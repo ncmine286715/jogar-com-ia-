@@ -4,6 +4,7 @@
 
 import threading
 import time
+import traceback
 
 import avatar
 import config
@@ -71,6 +72,7 @@ def worker(use_vad: bool) -> None:
             cycle(use_vad)
         except Exception as e:
             print(f"[LOOP] erro: {e}")
+            traceback.print_exc()
     state.running = False
 
 
