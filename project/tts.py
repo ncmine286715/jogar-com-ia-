@@ -3,6 +3,7 @@
 
 import asyncio
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -15,11 +16,41 @@ from scipy.io import wavfile
 import config
 import state
 
+# Gírias/risadas escritas que a voz lê errado -> como devem soar faladas.
+_SPEECH_FIXES = {
+    "krl": "caralho", "pqp": "puta que pariu", "mds": "meu deus",
+    "vc": "você", "vcs": "vocês", "tb": "também", "tbm": "também",
+    "blz": "beleza", "vlw": "valeu", "flw": "falou", "pf": "por favor",
+    "msm": "mesmo", "qnd": "quando", "pra": "pra", "tá": "tá", "né": "né",
+}
+# Risada escrita repetida (kkkk, rsrs, hahaha, ahahah) -> uma risada limpa.
+_LAUGH_RE = re.compile(r"\b(?:k{2,}|(?:rs){2,}|(?:a?ha){2,}h?|hu{2,})\b", re.I)
+# Letras repetidas em excesso (ééééé, simmm) -> no máximo duas.
+_REPEAT_RE = re.compile(r"(.)\1{2,}")
+
+
+def _normalize_for_speech(text: str) -> str:
+    """Deixa o texto mais falável: troca gírias e some com risada digitada."""
+    if not config.TTS_NORMALIZE:
+        return text
+    text = _LAUGH_RE.sub("haha", text)
+    text = _REPEAT_RE.sub(r"\1\1", text)
+
+    def _swap(m):
+        return _SPEECH_FIXES.get(m.group(0).lower(), m.group(0))
+
+    text = re.sub(r"\b\w+\b", _swap, text)
+    return re.sub(r"\s+", " ", text).strip()
+
 
 async def _synthesize(text: str) -> bytes:
     """Gera MP3 com edge-tts e retorna os bytes."""
     communicate = edge_tts.Communicate(
-        text, voice=config.TTS_VOICE, rate=config.TTS_RATE, pitch=config.TTS_PITCH
+        text,
+        voice=config.TTS_VOICE,
+        rate=config.TTS_RATE,
+        pitch=config.TTS_PITCH,
+        volume=config.TTS_VOLUME,
     )
     audio = bytearray()
     async for chunk in communicate.stream():
@@ -64,7 +95,7 @@ def speak(text: str) -> None:
         return
     wav_path = None
     try:
-        mp3 = asyncio.run(_synthesize(text))
+        mp3 = asyncio.run(_synthesize(_normalize_for_speech(text)))
         wav_path = _mp3_to_wav_file(mp3)
         rate, data = wavfile.read(wav_path)
         env = _envelope(data, rate)

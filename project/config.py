@@ -4,9 +4,11 @@
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5vl:7b"   # 7b le a tela MUITO melhor que o 3b
 OLLAMA_TIMEOUT = 120  # segundos
-OLLAMA_NUM_PREDICT = 90  # poucos tokens = resposta curta, mas com espaço pra graça
+OLLAMA_NUM_PREDICT = 55  # CURTO de verdade: corta os textões que ficavam ruins
 OLLAMA_TEMPERATURE = 0.85  # MAIS ALTO = mais zueira/personalidade (0.5 deixava sério)
 OLLAMA_TOP_P = 0.95
+# Para de gerar quando começa um novo turno (evita textão e repetição)
+OLLAMA_STOP = ["\n\n", "Você:", "👤"]
 
 # Nome da personagem (aparece no avatar)
 PERSONA_NAME = "Zoeira"
@@ -69,10 +71,14 @@ SCREENSHOT_MAX_WIDTH = 1024      # nitidez x latência (mais largo = vê melhor)
 SCREENSHOT_JPEG_QUALITY = 85     # qualidade maior ajuda o modelo a ler a tela
 
 # --- TTS (edge-tts) ---
-# Vozes BR masculinas realistas: pt-BR-AntonioNeural (a melhor opção do BR).
-TTS_VOICE = "pt-BR-AntonioNeural"
-TTS_RATE = "+2%"                # quase natural, só uma pitada mais ágil
-TTS_PITCH = "-4Hz"              # leve grave = soa mais "homem real"
+# Vozes BR masculinas: pt-BR-AntonioNeural (séria) e pt-BR-FabioNeural (mais
+# jovem/descontraída, combina mais com zueira de gameplay).
+TTS_VOICE = "pt-BR-FabioNeural"
+TTS_RATE = "+6%"                # falar um tiquinho mais rápido = mais natural/animado
+TTS_PITCH = "+0Hz"             # sem forçar grave: pitch artificial = voz robótica
+TTS_VOLUME = "+0%"             # volume da voz (edge-tts)
+# Limpa gírias/risadas escritas que fazem a voz tropeçar (lê "krl", "kkkk"...).
+TTS_NORMALIZE = True
 
 # --- Avatar (janela com lip-sync para capturar no OBS) ---
 AVATAR_ENABLED = True            # False = roda só no terminal, sem janela
@@ -99,6 +105,15 @@ AVATAR_MOUTH_OPEN_THRESHOLD = 0.12        # nível de voz a partir do qual a boc
 AVATAR_FLOAT_ENABLED = True
 AVATAR_FLOAT_AMPLITUDE = 14      # pixels de deslocamento
 AVATAR_FLOAT_SPEED = 1.6         # velocidade da flutuação
+
+# --- Efeitos sonoros (SFX) ---
+# Toca um efeito curto antes da fala, escolhido pelo clima do comentário
+# (ex: "morri" -> boom; risada -> buzina). Funciona out-of-the-box com efeitos
+# gerados na hora; se você colocar .wav em assets/sfx/<nome>.wav, ele usa o seu.
+SFX_ENABLED = True
+SFX_DIR = "assets/sfx"
+SFX_VOLUME = 0.35               # 0..1 — fica abaixo da voz pra não atropelar
+SFX_COOLDOWN = 4.0             # segundos mínimos entre efeitos (não vira poluição)
 
 # --- Modo de operação ---
 # "loop" = escuta contínua por voz, sem ENTER | "push" = pressione ENTER para falar

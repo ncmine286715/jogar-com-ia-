@@ -8,6 +8,7 @@ import avatar
 import config
 import llm
 import screen
+import sfx
 import state
 import stt
 import tts
@@ -18,8 +19,9 @@ def respond(prompt_text: str, label: str) -> None:
     state.status = "pensando"
     image_b64 = screen.capture_base64()
     answer = llm.ask(prompt_text, image_b64)
-    print(f"🤖 {config.PERSONA_NAME} ({label}): {answer}")
+    print(f"[{config.PERSONA_NAME} | {label}] {answer}")
     state.caption = answer
+    sfx.play_for(answer)            # efeito sonoro que combina com o clima
     tts.speak(answer)
     state.status = "ouvindo"
 
@@ -39,7 +41,7 @@ def cycle(use_vad: bool) -> None:
         return
     if not user_text:                   # falhou transcrição / vazio
         return
-    print(f"👤 Você: {user_text}")
+    print(f"[Você] {user_text}")
     respond(user_text, "resposta")
 
 
