@@ -94,6 +94,10 @@ TTS_PITCH = "+0Hz"             # sem forçar grave: pitch artificial = voz robó
 TTS_VOLUME = "+0%"             # volume da voz (edge-tts)
 # Limpa gírias/risadas escritas que fazem a voz tropeçar (lê "krl", "kkkk"...).
 TTS_NORMALIZE = True
+# Se a voz principal falhar (servidor da Microsoft devolve áudio vazio), tenta
+# estas no lugar. Todas são vozes neurais BR realistas e gratuitas.
+TTS_FALLBACK_VOICES = ["pt-BR-AntonioNeural", "pt-BR-ThalitaNeural"]
+TTS_RETRIES = 2                # tentativas por voz antes de pular pra próxima
 
 # --- Avatar (janela com lip-sync para capturar no OBS) ---
 AVATAR_ENABLED = True            # False = roda só no terminal, sem janela

@@ -43,11 +43,10 @@ def _normalize_for_speech(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-async def _synthesize(text: str) -> bytes:
-    """Gera MP3 com edge-tts e retorna os bytes."""
+async def _stream_voice(text: str, voice: str) -> bytes:
     communicate = edge_tts.Communicate(
         text,
-        voice=config.TTS_VOICE,
+        voice=voice,
         rate=config.TTS_RATE,
         pitch=config.TTS_PITCH,
         volume=config.TTS_VOLUME,
@@ -57,6 +56,26 @@ async def _synthesize(text: str) -> bytes:
         if chunk["type"] == "audio":
             audio.extend(chunk["data"])
     return bytes(audio)
+
+
+async def _synthesize(text: str) -> bytes:
+    """Gera MP3 com edge-tts. Tenta de novo e cai numa voz alternativa se o
+    servidor devolver áudio vazio ('No audio was received')."""
+    voices = [config.TTS_VOICE] + [
+        v for v in config.TTS_FALLBACK_VOICES if v != config.TTS_VOICE
+    ]
+    last_err = None
+    for voice in voices:
+        for attempt in range(config.TTS_RETRIES):
+            try:
+                audio = await _stream_voice(text, voice)
+                if audio:
+                    return audio
+                last_err = "áudio vazio"
+            except Exception as e:
+                last_err = e
+            await asyncio.sleep(0.4)  # respiro antes de tentar de novo
+    raise RuntimeError(f"edge-tts falhou ({last_err}). Atualize: pip install -U edge-tts")
 
 
 def _mp3_to_wav_file(mp3: bytes) -> str:
