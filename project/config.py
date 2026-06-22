@@ -4,7 +4,7 @@
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5vl:7b"   # na pratica delira MUITO menos que o minicpm-v (que mistura idioma e inventa historia) nesse hardware
 OLLAMA_TIMEOUT = 120  # segundos
-OLLAMA_NUM_PREDICT = 130  # espaço pra 2-4 frases sem deixar o modelo divagar
+OLLAMA_NUM_PREDICT = 180  # 2-4 frases completas sem ficar cortando no meio
 OLLAMA_TEMPERATURE = 0.6  # equilibrio: ainda solta piada mas sem viajar
 OLLAMA_TOP_P = 0.9
 OLLAMA_REPEAT_PENALTY = 1.15  # evita repetir as mesmas piadas/bordões
