@@ -3,9 +3,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Backend do modelo ---
+# "gemini" = Google Gemini Flash (gratis, rapido, melhor visao)
+# "nim"    = NVIDIA NIM na nuvem (build.nvidia.com)
 # "ollama" = local (Qwen2.5-VL, 100% offline)
-# "nim"    = NVIDIA NIM na nuvem (build.nvidia.com), muito mais rápido
-LLM_BACKEND = "nim"
+LLM_BACKEND = "gemini"
+
+# --- Google Gemini ---
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_TIMEOUT = 20
+GEMINI_MAX_TOKENS = 150
+GEMINI_TEMPERATURE = 0.9
 
 # --- NVIDIA NIM ---
 NIM_API_KEY = os.environ.get("NVIDIA_API_KEY", "")

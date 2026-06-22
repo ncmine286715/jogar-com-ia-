@@ -16,6 +16,51 @@ def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _ask_gemini(prompt: str, image_b64: str) -> str:
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{config.GEMINI_MODEL}:generateContent?key={config.GEMINI_API_KEY}"
+    )
+    payload = {
+        "system_instruction": {"parts": [{"text": config.SYSTEM_PROMPT}]},
+        "contents": [
+            {
+                "parts": [
+                    {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
+                    {"text": prompt},
+                ],
+            }
+        ],
+        "generationConfig": {
+            "maxOutputTokens": config.GEMINI_MAX_TOKENS,
+            "temperature": config.GEMINI_TEMPERATURE,
+        },
+        "safetySettings": [
+            {"category": c, "threshold": "BLOCK_NONE"}
+            for c in [
+                "HARM_CATEGORY_HARASSMENT",
+                "HARM_CATEGORY_HATE_SPEECH",
+                "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                "HARM_CATEGORY_DANGEROUS_CONTENT",
+            ]
+        ],
+    }
+    try:
+        r = requests.post(url, json=payload, timeout=config.GEMINI_TIMEOUT)
+        r.raise_for_status()
+        data = r.json()
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        return _clean(text)
+    except requests.exceptions.Timeout:
+        return "Porra, travou tudo, nao consigo pensar direito agora."
+    except requests.exceptions.ConnectionError:
+        return "Mano, perdi a conexao, to isolado aqui."
+    except (KeyError, IndexError):
+        return "Caralho, bugou minha cabeca, tenta de novo."
+    except Exception as e:
+        return f"Erro Gemini: {e}"
+
+
 def _ask_nim(prompt: str, image_b64: str) -> str:
     headers = {
         "Authorization": f"Bearer {config.NIM_API_KEY}",
@@ -89,6 +134,8 @@ def _ask_ollama(prompt: str, image_b64: str) -> str:
 
 
 def ask(prompt: str, image_b64: str) -> str:
+    if config.LLM_BACKEND == "gemini":
+        return _ask_gemini(prompt, image_b64)
     if config.LLM_BACKEND == "nim":
         return _ask_nim(prompt, image_b64)
     return _ask_ollama(prompt, image_b64)
