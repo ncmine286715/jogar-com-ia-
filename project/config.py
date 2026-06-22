@@ -1,4 +1,28 @@
+import os
+
 # config.py — configurações centrais do assistente
+
+# --- Backend do modelo ---
+# "ollama" = local (Qwen2.5-VL via Ollama, 100% offline)
+# "nim"    = NVIDIA NIM na nuvem (build.nvidia.com), modelo muito mais forte,
+#            tier gratuito com limite de requisições/min.
+LLM_BACKEND = "nim"
+
+# --- NVIDIA NIM (build.nvidia.com) ---
+# A API key NUNCA fica no código/git — exporte no terminal antes de rodar:
+#   export NVIDIA_API_KEY="nvapi-xxxxxxxx"
+# (ou coloque num arquivo .env na pasta project/, que está no .gitignore)
+NIM_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
+NIM_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+# Melhor modelo de visão disponível no NIM hoje pra esse uso: entende cena,
+# OCR de HUD/menu e segue persona em PT-BR muito melhor que qualquer modelo
+# de 7-11B local. Se bater rate limit do free tier, troque pro 11b (mais leve).
+NIM_MODEL = "meta/llama-3.2-90b-vision-instruct"
+NIM_MODEL_FALLBACK = "meta/llama-3.2-11b-vision-instruct"
+NIM_TIMEOUT = 60
+NIM_MAX_TOKENS = 220
+NIM_TEMPERATURE = 0.7
+NIM_TOP_P = 0.9
 
 # --- Ollama ---
 OLLAMA_URL = "http://localhost:11434/api/generate"

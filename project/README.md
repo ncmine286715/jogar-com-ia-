@@ -10,9 +10,12 @@ e um **avatar abre a boca em lip-sync** com o que ela fala.
 > Testamos o MiniCPM-V como alternativa (benchmark sugeria menos
 > alucinação), mas na prática ele misturou idiomas e inventou histórias
 > inteiras que não estavam na tela. O Qwen2.5-VL 7B se manteve mais fiel
-> ao que realmente aparece — por isso é o padrão do projeto.
+> ao que realmente aparece — por isso é o padrão local do projeto.
 
-100% local — exceto o TTS (edge-tts). Nenhuma API paga.
+Por padrão roda 100% local (exceto o TTS, que usa edge-tts). Também dá
+pra usar a **NVIDIA NIM** (nuvem, tier gratuito) no lugar do Ollama —
+modelo muito mais forte, sem precisar de GPU local — trocando
+`LLM_BACKEND` em `config.py` (veja a seção **NVIDIA NIM** abaixo).
 
 ## Estrutura
 
@@ -94,12 +97,42 @@ Sem esses arquivos, cai automaticamente num rosto desenhado em código.
 
 Desligue o avatar com `AVATAR_ENABLED = False` (roda só no terminal/voz).
 
+## NVIDIA NIM (cloud, opcional)
+
+Em vez do Ollama local, dá pra usar a [NVIDIA NIM](https://build.nvidia.com)
+— tem tier **gratuito** com limite de requisições por minuto, e os modelos
+são bem mais fortes que qualquer coisa que caiba numa RTX 8GB.
+
+1. Crie a conta em build.nvidia.com e gere uma API key (`nvapi-...`).
+2. **NUNCA** cole a key em nenhum arquivo do repositório. Exporte como
+   variável de ambiente antes de rodar:
+   ```bash
+   export NVIDIA_API_KEY="nvapi-xxxxxxxxxxxxxxxx"
+   ```
+   (pra não digitar de novo a cada terminal, adicione essa linha no seu
+   `~/.bashrc`/`~/.zshrc`, ou crie um arquivo `project/.env` — já está no
+   `.gitignore` — e exporte a partir dele com `source .env` antes de
+   rodar o `main.py`.)
+3. Em `config.py`, defina `LLM_BACKEND = "nim"` (já é o padrão).
+4. Rode `python main.py` normalmente — sem precisar do `ollama serve`.
+
+O modelo padrão é o `meta/llama-3.2-90b-vision-instruct`, hoje uma das
+melhores opções de visão+chat disponíveis na NIM: entende cena e
+texto/HUD na imagem muito melhor que os modelos locais de 7-11B, e segue
+a persona em PT-BR com menos alucinação. Se bater o limite do free tier
+(HTTP 429), o código cai automaticamente pro `NIM_MODEL_FALLBACK`
+(`meta/llama-3.2-11b-vision-instruct`, mais leve).
+
+Pra voltar ao modo 100% local, basta `LLM_BACKEND = "ollama"`.
+
 ## Ajustes rápidos (`config.py`)
 
 | Variável                  | Função                                            |
 |---------------------------|----------------------------------------------------|
 | `PERSONA_NAME`            | nome da personagem (título da janela/logs)        |
 | `SYSTEM_PROMPT`           | personalidade e tom dela                           |
+| `LLM_BACKEND`             | `"ollama"` (local) ou `"nim"` (NVIDIA NIM, cloud)  |
+| `NIM_MODEL`               | modelo de visão usado na NIM                       |
 | `WHISPER_MODEL`           | precisão x velocidade do STT (`tiny`..`large-v3`) |
 | `WHISPER_DEVICE`          | `cpu` ou `cuda` (GPU NVIDIA)                       |
 | `VAD_THRESHOLD`           | sensibilidade do microfone no modo `loop` (RMS)   |
