@@ -31,6 +31,8 @@ def ask(prompt: str, image_b64: str) -> str:
             "num_predict": config.OLLAMA_NUM_PREDICT,
             "temperature": config.OLLAMA_TEMPERATURE,
             "top_p": config.OLLAMA_TOP_P,
+            "top_k": getattr(config, "OLLAMA_TOP_K", 60),
+            "repeat_penalty": getattr(config, "OLLAMA_REPEAT_PENALTY", 1.15),
         },
     }
     try:
