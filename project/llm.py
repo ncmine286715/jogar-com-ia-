@@ -1,12 +1,9 @@
-# llm.py — chamada ao Qwen2.5-VL via Ollama (/api/generate)
-
 import re
 
 import requests
 
 import config
 
-# Remove emojis e símbolos (o TTS lê ou engasga neles) + markdown
 _EMOJI = re.compile(
     "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF"
     "\U00002190-\U000021FF\U00002B00-\U00002BFF\U0000FE00-\U0000FE0F]+"
@@ -19,8 +16,52 @@ def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def ask(prompt: str, image_b64: str) -> str:
-    """Envia texto + imagem (base64) ao Ollama e retorna a resposta textual."""
+def _ask_nim(prompt: str, image_b64: str) -> str:
+    headers = {
+        "Authorization": f"Bearer {config.NIM_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    messages = [
+        {"role": "system", "content": config.SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"},
+                },
+                {"type": "text", "text": prompt},
+            ],
+        },
+    ]
+    payload = {
+        "model": config.NIM_MODEL,
+        "messages": messages,
+        "max_tokens": config.NIM_MAX_TOKENS,
+        "temperature": config.NIM_TEMPERATURE,
+        "top_p": config.NIM_TOP_P,
+        "stream": False,
+    }
+    try:
+        r = requests.post(
+            config.NIM_URL, json=payload, headers=headers, timeout=config.NIM_TIMEOUT
+        )
+        if r.status_code == 429:
+            payload["model"] = config.NIM_MODEL_FALLBACK
+            r = requests.post(
+                config.NIM_URL, json=payload, headers=headers, timeout=config.NIM_TIMEOUT
+            )
+        r.raise_for_status()
+        return _clean(r.json()["choices"][0]["message"]["content"])
+    except requests.exceptions.Timeout:
+        return "Porra, travou tudo, nao consigo pensar direito agora."
+    except requests.exceptions.ConnectionError:
+        return "Mano, perdi a conexao, to isolado aqui."
+    except Exception as e:
+        return f"Erro NIM: {e}"
+
+
+def _ask_ollama(prompt: str, image_b64: str) -> str:
     payload = {
         "model": config.OLLAMA_MODEL,
         "prompt": prompt,
@@ -43,11 +84,11 @@ def ask(prompt: str, image_b64: str) -> str:
         return "Erro: Ollama offline. Inicie com 'ollama serve'."
     except requests.exceptions.Timeout:
         return "Erro: o modelo demorou demais para responder."
-    except requests.exceptions.HTTPError as e:
-        try:
-            detail = r.json().get("error", str(e))
-        except Exception:
-            detail = str(e)
-        return f"Erro do Ollama: {detail} (verifique 'ollama pull {config.OLLAMA_MODEL}')"
     except Exception as e:
-        return f"Erro ao consultar o modelo: {e}"
+        return f"Erro Ollama: {e}"
+
+
+def ask(prompt: str, image_b64: str) -> str:
+    if config.LLM_BACKEND == "nim":
+        return _ask_nim(prompt, image_b64)
+    return _ask_ollama(prompt, image_b64)
