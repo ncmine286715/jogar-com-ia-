@@ -2,7 +2,7 @@
 
 # --- Ollama ---
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5vl:7b"   # 7b le a tela MUITO melhor que o 3b
+OLLAMA_MODEL = "minicpm-v"   # melhor leitura de tela/OCR e menos alucinacao que o qwen2.5vl 7b nesse hardware
 OLLAMA_TIMEOUT = 120  # segundos
 OLLAMA_NUM_PREDICT = 220  # espaço pra ela soltar piada de verdade, sem cortar no meio
 OLLAMA_TEMPERATURE = 0.85  # mais alto = mais criativa, deboche menos travado
@@ -86,6 +86,9 @@ TTS_PITCH = "-4Hz"              # leve grave = soa mais "homem real"
 
 # --- Avatar (janela com lip-sync para capturar no OBS) ---
 AVATAR_ENABLED = True            # False = roda só no terminal, sem janela
+AVATAR_ALWAYS_ON_TOP = True       # mantém a janela do avatar flutuando por
+                                  # cima de qualquer app/jogo (precisa de
+                                  # 'wmctrl' instalado no Linux/X11)
 AVATAR_WIDTH = 480
 AVATAR_HEIGHT = 560
 AVATAR_FPS = 30

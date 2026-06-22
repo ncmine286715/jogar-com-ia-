@@ -1,10 +1,10 @@
-# Zoeira — Assistente Multimodal Local (Qwen2.5-VL + Ollama)
+# Zoeira — Assistente Multimodal Local (MiniCPM-V + Ollama)
 
 Narradora de IA com **avatar animado** que vê sua tela e reage **como se
 fosse vida real acontecendo ao vivo** — surta, debocha, zoa o jogador e
 comenta sozinha enquanto você joga. Feita pra **criar conteúdo / clipe de
 stream**: ouve o microfone, transcreve com Whisper local, tira screenshot,
-manda pro **Qwen2.5-VL** via **Ollama local**, responde por voz (edge-tts)
+manda pro **MiniCPM-V** via **Ollama local**, responde por voz (edge-tts)
 e um **avatar abre a boca em lip-sync** com o que ela fala.
 
 100% local — exceto o TTS (edge-tts). Nenhuma API paga.
@@ -27,13 +27,18 @@ project/
 
 ```bash
 # Dependências de sistema
-sudo pacman -S python ffmpeg portaudio
+sudo pacman -S python ffmpeg portaudio wmctrl
 
 # Ollama + modelo
-# instale o Ollama (https://ollama.com), depois:
-ollama pull qwen2.5vl:3b
+# instale/atualize o Ollama (https://ollama.com), depois:
+ollama pull minicpm-v
 ollama serve   # deixa rodando em http://localhost:11434
 ```
+
+`wmctrl` é opcional, só necessário pro avatar ficar **sempre por cima de
+outros apps/jogos** (X11/XWayland). No Wayland puro não tem como nenhum
+programa se forçar acima de outro — é uma trava do protocolo, não do
+Zoeira.
 
 ## Instalação
 
@@ -101,6 +106,7 @@ Desligue o avatar com `AVATAR_ENABLED = False` (roda só no terminal/voz).
 | `TTS_VOICE`               | voz do edge-tts (`edge-tts --list-voices`)        |
 | `TTS_RATE`                | velocidade da fala (ex: `+12%`)                    |
 | `AVATAR_ENABLED`          | liga/desliga a janela do avatar                    |
+| `AVATAR_ALWAYS_ON_TOP`    | janela do avatar flutua por cima de qualquer app/jogo (precisa `wmctrl` no Linux) |
 | `AVATAR_BG`               | cor de fundo p/ chroma key no OBS                  |
 | `AVATAR_MOUTH_SENSITIVITY`| o quanto a boca abre em relação ao volume          |
 | `MODE`                    | `loop` (sem ENTER) ou `push`                      |
