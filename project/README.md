@@ -66,10 +66,15 @@ python main.py
 
 ## Avatar + criação de conteúdo
 
-Ao rodar, abre uma janela com o rosto da personagem. A **boca abre em
-lip-sync** com a voz (sincronizada pela amplitude do áudio), os olhos
-piscam, e aparece o **status** (ouvindo/pensando/falando) + **legenda** do
-que ela está falando.
+Ao rodar, abre uma janela com o avatar. A **boca abre em lip-sync** com a
+voz (sincronizada pela amplitude do áudio), o personagem **flutua**
+suavemente, e aparece o **status** (ouvindo/pensando/falando) + **legenda**
+do que ele está falando.
+
+**Avatar em PNG (seu personagem):** coloque `base.png` (+ opcionalmente
+`mouth_closed.png`/`mouth_open.png`) em `assets/avatar/` — veja
+`assets/avatar/README.md` pra detalhes de como funciona o anchor da boca.
+Sem esses arquivos, cai automaticamente num rosto desenhado em código.
 
 **Capturar no OBS:**
 1. O fundo da janela é **verde puro** (`AVATAR_BG`) — adicione a janela como

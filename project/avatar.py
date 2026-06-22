@@ -1,4 +1,6 @@
-# avatar.py — rosto animado com lip-sync (pygame). Roda na thread principal.
+# avatar.py — avatar com lip-sync (pygame). Roda na thread principal.
+# Suporta avatar em PNG (assets/avatar/*.png) com efeito de flutuação;
+# se os PNGs não existirem, cai automaticamente no rosto desenhado.
 
 import math
 import os
@@ -8,7 +10,7 @@ import time
 import config
 import state
 
-# Cores
+# Cores (modo desenhado / fallback)
 SKIN = (255, 219, 172)
 SKIN_DK = (214, 170, 120)
 HAIR = (60, 40, 30)
@@ -41,6 +43,123 @@ def _wrap(font, text, max_w):
     return lines[-3:]  # no máximo 3 últimas linhas
 
 
+def _float_offset(now: float) -> int:
+    if not config.AVATAR_FLOAT_ENABLED:
+        return 0
+    return int(math.sin(now * config.AVATAR_FLOAT_SPEED) * config.AVATAR_FLOAT_AMPLITUDE)
+
+
+def _load_png_assets(pygame, win_w: int, win_h: int):
+    """Carrega base.png/mouth_closed.png/mouth_open.png já escalados.
+    Retorna None se AVATAR_USE_PNG=False ou o base.png não existir."""
+    if not config.AVATAR_USE_PNG:
+        return None
+
+    base_path = os.path.join(config.AVATAR_ASSETS_DIR, config.AVATAR_BASE_IMAGE)
+    if not os.path.exists(base_path):
+        return None
+
+    try:
+        base = pygame.image.load(base_path).convert_alpha()
+        target_h = int(win_h * config.AVATAR_PNG_SCALE)
+        scale = target_h / base.get_height()
+        target_w = int(base.get_width() * scale)
+        base = pygame.transform.smoothscale(base, (target_w, target_h))
+
+        def _load_optional(name):
+            path = os.path.join(config.AVATAR_ASSETS_DIR, name)
+            if not os.path.exists(path):
+                return None
+            img = pygame.image.load(path).convert_alpha()
+            return pygame.transform.smoothscale(
+                img, (int(img.get_width() * scale), int(img.get_height() * scale))
+            )
+
+        return {
+            "base": base,
+            "mouth_closed": _load_optional(config.AVATAR_MOUTH_CLOSED_IMAGE),
+            "mouth_open": _load_optional(config.AVATAR_MOUTH_OPEN_IMAGE),
+        }
+    except Exception as e:
+        print(f"[AVATAR] falha ao carregar PNGs ({e}); usando rosto desenhado.")
+        return None
+
+
+def _draw_png(pygame, screen, assets, cx, cy, y_off, level):
+    base = assets["base"]
+    bx = cx - base.get_width() // 2
+    by = cy - base.get_height() // 2 + y_off
+    screen.blit(base, (bx, by))
+
+    mouth_img = (
+        assets["mouth_open"]
+        if level > config.AVATAR_MOUTH_OPEN_THRESHOLD
+        else assets["mouth_closed"]
+    )
+    if mouth_img:
+        ax, ay = config.AVATAR_MOUTH_ANCHOR
+        mx = bx + int(base.get_width() * ax) - mouth_img.get_width() // 2
+        my = by + int(base.get_height() * ay) - mouth_img.get_height() // 2
+        screen.blit(mouth_img, (mx, my))
+
+
+def _draw_procedural(pygame, screen, cx, cy, blinking, level):
+    head_w, head_h = int(config.AVATAR_WIDTH * 0.62), int(config.AVATAR_HEIGHT * 0.52)
+
+    pygame.draw.ellipse(
+        screen, HAIR,
+        (cx - head_w // 2 - 12, cy - head_h // 2 - 22, head_w + 24, head_h + 30),
+    )
+    pygame.draw.ellipse(screen, SKIN, (cx - head_w // 2, cy - head_h // 2, head_w, head_h))
+    pygame.draw.ellipse(
+        screen, SKIN_DK, (cx - head_w // 2, cy - head_h // 2, head_w, head_h), 3
+    )
+
+    eye_dx = int(head_w * 0.22)
+    eye_y = cy - int(head_h * 0.08)
+    eye_w, eye_h = int(head_w * 0.20), int(head_h * 0.16)
+    brow = int(level * 10)
+    for sx in (-1, 1):
+        ex = cx + sx * eye_dx
+        if blinking:
+            pygame.draw.line(
+                screen, SKIN_DK, (ex - eye_w // 2, eye_y), (ex + eye_w // 2, eye_y), 4
+            )
+        else:
+            pygame.draw.ellipse(
+                screen, WHITE, (ex - eye_w // 2, eye_y - eye_h // 2, eye_w, eye_h)
+            )
+            pygame.draw.circle(screen, PUPIL, (ex, eye_y + 2), max(4, eye_h // 4))
+        pygame.draw.line(
+            screen, HAIR,
+            (ex - eye_w // 2, eye_y - eye_h // 2 - 8 - brow),
+            (ex + eye_w // 2, eye_y - eye_h // 2 - 12 - brow), 5,
+        )
+
+    for sx in (-1, 1):
+        pygame.draw.circle(
+            screen, BLUSH, (cx + sx * int(head_w * 0.28), cy + int(head_h * 0.14)), 14
+        )
+
+    mouth_y = cy + int(head_h * 0.27)
+    mouth_w = int(head_w * 0.42)
+    open_h = int(6 + level * config.AVATAR_MOUTH_SENSITIVITY * 64)
+    if open_h <= 8:
+        pygame.draw.arc(
+            screen, MOUTH, (cx - mouth_w // 2, mouth_y - 14, mouth_w, 30),
+            math.pi, 2 * math.pi, 6,
+        )
+    else:
+        rect = (cx - mouth_w // 2, mouth_y - open_h // 2, mouth_w, open_h)
+        pygame.draw.ellipse(screen, MOUTH, rect)
+        if open_h > 26:
+            t_h = open_h // 3
+            pygame.draw.ellipse(
+                screen, TONGUE,
+                (cx - mouth_w // 4, mouth_y + open_h // 6, mouth_w // 2, t_h),
+            )
+
+
 def run():
     """Loop de render do avatar. Retorna False se não conseguir abrir janela."""
     try:
@@ -62,8 +181,14 @@ def run():
         print(f"[AVATAR] não foi possível abrir janela ({e}); sem avatar.")
         return False
 
-    cx, cy = W // 2, int(H * 0.42)
-    head_w, head_h = int(W * 0.62), int(H * 0.52)
+    png_assets = _load_png_assets(pygame, W, H)
+    if png_assets:
+        print(f"[AVATAR] usando PNG de {config.AVATAR_ASSETS_DIR}/")
+        cx, cy = W // 2, H // 2
+    else:
+        print("[AVATAR] PNGs não encontrados; usando rosto desenhado.")
+        cx, cy = W // 2, int(H * 0.42)
+
     next_blink = time.time() + random.uniform(2, 5)
     blink_until = 0.0
 
@@ -73,7 +198,6 @@ def run():
             if ev.type == pygame.QUIT:
                 state.running = False
 
-        # Pisca os olhos de vez em quando (dá vida)
         if now > next_blink:
             blink_until = now + 0.12
             next_blink = now + random.uniform(2, 5)
@@ -81,78 +205,18 @@ def run():
 
         level = max(0.0, min(1.0, state.mouth_level))
         accent = STATUS_COLORS.get(state.status, (200, 200, 200))
+        y_off = _float_offset(now)
 
         screen.fill(config.AVATAR_BG)
 
-        # Cabelo (atrás da cabeça)
-        pygame.draw.ellipse(
-            screen, HAIR,
-            (cx - head_w // 2 - 12, cy - head_h // 2 - 22, head_w + 24, head_h + 30),
-        )
-        # Rosto
-        pygame.draw.ellipse(
-            screen, SKIN, (cx - head_w // 2, cy - head_h // 2, head_w, head_h)
-        )
-        pygame.draw.ellipse(
-            screen, SKIN_DK,
-            (cx - head_w // 2, cy - head_h // 2, head_w, head_h), 3,
-        )
-
-        eye_dx = int(head_w * 0.22)
-        eye_y = cy - int(head_h * 0.08)
-        eye_w, eye_h = int(head_w * 0.20), int(head_h * 0.16)
-        # Sobrancelhas sobem quando fala mais alto (expressivo)
-        brow = int(level * 10)
-        for sx in (-1, 1):
-            ex = cx + sx * eye_dx
-            if blinking:
-                pygame.draw.line(
-                    screen, SKIN_DK, (ex - eye_w // 2, eye_y), (ex + eye_w // 2, eye_y), 4
-                )
-            else:
-                pygame.draw.ellipse(
-                    screen, WHITE, (ex - eye_w // 2, eye_y - eye_h // 2, eye_w, eye_h)
-                )
-                pygame.draw.circle(screen, PUPIL, (ex, eye_y + 2), max(4, eye_h // 4))
-            pygame.draw.line(
-                screen, HAIR,
-                (ex - eye_w // 2, eye_y - eye_h // 2 - 8 - brow),
-                (ex + eye_w // 2, eye_y - eye_h // 2 - 12 - brow), 5,
-            )
-
-        # Bochechas
-        for sx in (-1, 1):
-            pygame.draw.circle(
-                screen, BLUSH,
-                (cx + sx * int(head_w * 0.28), cy + int(head_h * 0.14)), 14
-            )
-
-        # Boca com lip-sync: altura cresce com o volume da fala
-        mouth_y = cy + int(head_h * 0.27)
-        mouth_w = int(head_w * 0.42)
-        open_h = int(6 + level * config.AVATAR_MOUTH_SENSITIVITY * 64)
-        if open_h <= 8:  # boca fechada = sorriso fino
-            pygame.draw.arc(
-                screen, MOUTH,
-                (cx - mouth_w // 2, mouth_y - 14, mouth_w, 30),
-                math.pi, 2 * math.pi, 6,
-            )
+        if png_assets:
+            _draw_png(pygame, screen, png_assets, cx, cy + y_off, 0, level)
         else:
-            rect = (cx - mouth_w // 2, mouth_y - open_h // 2, mouth_w, open_h)
-            pygame.draw.ellipse(screen, MOUTH, rect)
-            if open_h > 26:  # língua quando escancara
-                t_h = open_h // 3
-                pygame.draw.ellipse(
-                    screen, TONGUE,
-                    (cx - mouth_w // 4, mouth_y + open_h // 6, mouth_w // 2, t_h),
-                )
+            _draw_procedural(pygame, screen, cx, cy + y_off, blinking, level)
 
         # Status (topo)
-        dot = 12
-        pygame.draw.circle(screen, accent, (24, 26), dot)
-        screen.blit(
-            f_status.render(state.status.upper(), True, (30, 30, 30)), (42, 14)
-        )
+        pygame.draw.circle(screen, accent, (24, 26), 12)
+        screen.blit(f_status.render(state.status.upper(), True, (30, 30, 30)), (42, 14))
 
         # Legenda (rodapé) — ótimo pra clipe
         if config.AVATAR_SHOW_CAPTION and state.caption:

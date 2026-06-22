@@ -19,7 +19,7 @@ import state
 async def _synthesize(text: str) -> bytes:
     """Gera MP3 com edge-tts e retorna os bytes."""
     communicate = edge_tts.Communicate(
-        text, voice=config.TTS_VOICE, rate=config.TTS_RATE
+        text, voice=config.TTS_VOICE, rate=config.TTS_RATE, pitch=config.TTS_PITCH
     )
     audio = bytearray()
     async for chunk in communicate.stream():

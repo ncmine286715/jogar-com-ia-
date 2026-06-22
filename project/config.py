@@ -63,10 +63,10 @@ SCREENSHOT_MAX_WIDTH = 1024      # nitidez x latência (mais largo = vê melhor)
 SCREENSHOT_JPEG_QUALITY = 85     # qualidade maior ajuda o modelo a ler a tela
 
 # --- TTS (edge-tts) ---
-# Vozes BR boas: pt-BR-FranciscaNeural (fem) | pt-BR-ThalitaNeural (fem) |
-# pt-BR-AntonioNeural (masc). Liste todas com: edge-tts --list-voices
-TTS_VOICE = "pt-BR-FranciscaNeural"
-TTS_RATE = "+12%"               # +12% = fala mais animada/acelerada
+# Vozes BR masculinas realistas: pt-BR-AntonioNeural (a melhor opção do BR).
+TTS_VOICE = "pt-BR-AntonioNeural"
+TTS_RATE = "+2%"                # quase natural, só uma pitada mais ágil
+TTS_PITCH = "-4Hz"              # leve grave = soa mais "homem real"
 
 # --- Avatar (janela com lip-sync para capturar no OBS) ---
 AVATAR_ENABLED = True            # False = roda só no terminal, sem janela
@@ -74,8 +74,25 @@ AVATAR_WIDTH = 480
 AVATAR_HEIGHT = 560
 AVATAR_FPS = 30
 AVATAR_BG = (0, 255, 0)          # fundo verde = chroma key fácil no OBS
-AVATAR_SHOW_CAPTION = True       # mostra legenda do que ela tá falando
+AVATAR_SHOW_CAPTION = True       # mostra legenda do que ele tá falando
 AVATAR_MOUTH_SENSITIVITY = 1.6   # quanto a boca abre em relação ao volume
+
+# --- Avatar em PNG (opcional) ---
+# Coloque os PNGs (com fundo transparente) em project/assets/avatar/.
+# Se os arquivos não existirem, cai automaticamente no rosto desenhado.
+AVATAR_USE_PNG = True
+AVATAR_ASSETS_DIR = "assets/avatar"
+AVATAR_BASE_IMAGE = "base.png"            # corpo/rosto sem boca
+AVATAR_MOUTH_CLOSED_IMAGE = "mouth_closed.png"
+AVATAR_MOUTH_OPEN_IMAGE = "mouth_open.png"
+AVATAR_MOUTH_ANCHOR = (0.5, 0.62)         # posição da boca: % da largura/altura do base.png
+AVATAR_PNG_SCALE = 0.85                   # % da janela ocupada pela imagem base
+AVATAR_MOUTH_OPEN_THRESHOLD = 0.12        # nível de voz a partir do qual a boca abre
+
+# Efeito de flutuação (sobe/desce suavemente, tipo personagem boiando)
+AVATAR_FLOAT_ENABLED = True
+AVATAR_FLOAT_AMPLITUDE = 14      # pixels de deslocamento
+AVATAR_FLOAT_SPEED = 1.6         # velocidade da flutuação
 
 # --- Modo de operação ---
 # "loop" = escuta contínua por voz, sem ENTER | "push" = pressione ENTER para falar
