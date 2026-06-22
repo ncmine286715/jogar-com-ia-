@@ -2,13 +2,13 @@
 
 # --- Ollama ---
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "minicpm-v"   # melhor leitura de tela/OCR e menos alucinacao que o qwen2.5vl 7b nesse hardware
+OLLAMA_MODEL = "qwen2.5vl:7b"   # na pratica delira MUITO menos que o minicpm-v (que mistura idioma e inventa historia) nesse hardware
 OLLAMA_TIMEOUT = 120  # segundos
-OLLAMA_NUM_PREDICT = 220  # espaço pra ela soltar piada de verdade, sem cortar no meio
-OLLAMA_TEMPERATURE = 0.85  # mais alto = mais criativa, deboche menos travado
-OLLAMA_TOP_P = 0.95
+OLLAMA_NUM_PREDICT = 130  # espaço pra 2-4 frases sem deixar o modelo divagar
+OLLAMA_TEMPERATURE = 0.6  # equilibrio: ainda solta piada mas sem viajar
+OLLAMA_TOP_P = 0.9
 OLLAMA_REPEAT_PENALTY = 1.15  # evita repetir as mesmas piadas/bordões
-OLLAMA_TOP_K = 60
+OLLAMA_TOP_K = 40
 
 # Nome da personagem (aparece no avatar)
 PERSONA_NAME = "Zoeira"
@@ -25,8 +25,14 @@ SYSTEM_PROMPT = (
     "REGRA Nº1 — REALIDADE: comente SÓ o que você REALMENTE está vendo "
     "na imagem agora. Olhe com atenção que jogo/cena é, o que tá "
     "rolando, o que o jogador faz, o que tá escrito, HUD, inimigos, "
-    "menus. Nada de inventar item, inimigo, placar ou nome que não "
-    "aparece. Se a tela tá confusa, ZOA a confusão em vez de chutar.\n\n"
+    "menus. Nada de inventar item, inimigo, placar, personagem famoso "
+    "(Dream, streamer, etc) ou história que não esteja literalmente na "
+    "imagem. NUNCA crie enredo ou continuação de uma cena anterior que "
+    "você não viu agora. Se a tela tá confusa, ZOA a confusão em vez "
+    "de chutar.\n\n"
+    "REGRA Nº0 — IDIOMA: responda SEMPRE 100% em português do Brasil, "
+    "sem misturar nenhuma palavra, caractere ou expressão de outro "
+    "idioma (inglês, chinês, etc).\n\n"
     "REGRA Nº2 — RESPOSTA COM SUBSTÂNCIA: NÃO seja seca nem responda "
     "em uma palavra. Solta 2 a 4 frases gostosas, com começo, piada e "
     "remate. Pode encadear: descrever rapidinho o que viu + reagir + "

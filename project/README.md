@@ -1,11 +1,16 @@
-# Zoeira — Assistente Multimodal Local (MiniCPM-V + Ollama)
+# Zoeira — Assistente Multimodal Local (Qwen2.5-VL + Ollama)
 
 Narradora de IA com **avatar animado** que vê sua tela e reage **como se
 fosse vida real acontecendo ao vivo** — surta, debocha, zoa o jogador e
 comenta sozinha enquanto você joga. Feita pra **criar conteúdo / clipe de
 stream**: ouve o microfone, transcreve com Whisper local, tira screenshot,
-manda pro **MiniCPM-V** via **Ollama local**, responde por voz (edge-tts)
+manda pro **Qwen2.5-VL** via **Ollama local**, responde por voz (edge-tts)
 e um **avatar abre a boca em lip-sync** com o que ela fala.
+
+> Testamos o MiniCPM-V como alternativa (benchmark sugeria menos
+> alucinação), mas na prática ele misturou idiomas e inventou histórias
+> inteiras que não estavam na tela. O Qwen2.5-VL 7B se manteve mais fiel
+> ao que realmente aparece — por isso é o padrão do projeto.
 
 100% local — exceto o TTS (edge-tts). Nenhuma API paga.
 
@@ -31,7 +36,7 @@ sudo pacman -S python ffmpeg portaudio wmctrl
 
 # Ollama + modelo
 # instale/atualize o Ollama (https://ollama.com), depois:
-ollama pull minicpm-v
+ollama pull qwen2.5vl:7b
 ollama serve   # deixa rodando em http://localhost:11434
 ```
 
