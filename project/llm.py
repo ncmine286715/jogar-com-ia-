@@ -19,11 +19,20 @@ def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+# Reforço de persona colado no prompt: o qwen2.5vl dá pouco peso ao campo
+# "system", então repetimos a regra de ouro junto da fala do usuário pra ele
+# NUNCA cair no modo "sou uma IA assistente".
+_PERSONA_TAG = (
+    "[Você é a ZOEIRA, parceira de gameplay zoeira e debochada — responda "
+    "no personagem, com gíria BR e humor, NUNCA como IA/assistente.] "
+)
+
+
 def ask(prompt: str, image_b64: str) -> str:
     """Envia texto + imagem (base64) ao Ollama e retorna a resposta textual."""
     payload = {
         "model": config.OLLAMA_MODEL,
-        "prompt": prompt,
+        "prompt": _PERSONA_TAG + prompt,
         "system": config.SYSTEM_PROMPT,
         "images": [image_b64],
         "stream": False,
